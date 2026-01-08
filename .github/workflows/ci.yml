@@ -40,7 +40,7 @@ jobs:
         fail-on-error: false
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       if: success() || failure()
       with:
         files: ./target/site/jacoco/jacoco.xml
