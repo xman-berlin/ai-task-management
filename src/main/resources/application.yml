@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: dev
+
+langchain4j:
+  open-ai:
+    api-key: ${OPENAI_API_KEY:dummy}
+

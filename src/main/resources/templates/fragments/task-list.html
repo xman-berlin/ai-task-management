@@ -1,0 +1,35 @@
+<div th:fragment="list" id="task-list">
+    <table class="table table-striped align-middle">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Due</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasks}">
+            <td th:text="${task.title}"></td>
+            <td th:text="${task.priority}"></td>
+            <td th:text="${task.status}"></td>
+            <td th:text="${#temporals.format(task.dueDate, 'yyyy-MM-dd HH:mm')}"></td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary"
+                        th:attr="hx-get=@{/tasks/{id}(id=${task.id})}"
+                        hx-target="#modal-body"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#taskModal">Edit</button>
+                <button class="btn btn-sm btn-outline-danger"
+                        th:attr="hx-post=@{/tasks/{id}/delete(id=${task.id})}"
+                        hx-target="#task-list"
+                        hx-swap="outerHTML">
+                    Delete
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
