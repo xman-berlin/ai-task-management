@@ -12,6 +12,10 @@
         <h1 class="h3 mb-0">Tasks</h1>
         <button class="btn btn-primary ms-auto" hx-get="/tasks/new" hx-target="#modal-body" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#taskModal">New Task</button>
     </div>
+
+    <!-- Toast container -->
+    <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
     <div id="task-list" hx-get="/tasks/list" hx-trigger="load" hx-target="#task-list"></div>
 </div>
 
@@ -30,17 +34,72 @@
 
 <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
 <script>
+  const makeToast = (message, type) => {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-bg-${type || 'success'} border-0`;
+    toast.setAttribute('role','alert');
+    toast.setAttribute('aria-live','assertive');
+    toast.setAttribute('aria-atomic','true');
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>`;
+    toast.querySelector('.toast-body').textContent = message || '';
+    container.appendChild(toast);
+    const t = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    t.show();
+  };
+
+  const handleHxTrigger = (evt) => {
+    const hdr = evt.detail && evt.detail.xhr && evt.detail.xhr.getResponseHeader('HX-Trigger');
+    if (!hdr) return;
+    try {
+      const data = JSON.parse(hdr);
+      if (data.toast && data.toast.message) {
+        makeToast(data.toast.message, data.toast.type || 'success');
+      }
+    } catch(e) {
+      console.warn('HX-Trigger parse failed', e);
+    }
+  };
+
+  // Close modal when task list gets refreshed via HTMX
   document.body.addEventListener('htmx:afterSwap', function(evt) {
     const target = evt.detail && evt.detail.target;
     if (target && target.id === 'task-list') {
       const modalEl = document.getElementById('taskModal');
       if (modalEl) {
         const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) {
-          modal.hide();
-        }
+        if (modal) { modal.hide(); }
       }
     }
+  });
+
+  // Handle HX-Trigger once per request
+  document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+    handleHxTrigger(evt);
+  });
+
+  // Show toast on HTMX response errors (e.g., validation 400)
+  document.body.addEventListener('htmx:responseError', function(evt) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = evt.detail.xhr.response;
+    // Only initialize newly appended toasts
+    const newNodes = Array.from(wrapper.childNodes);
+    container.append(...newNodes);
+    newNodes.forEach(el => {
+      if (el.classList && el.classList.contains('toast')) {
+        const t = new bootstrap.Toast(el, { autohide: true, delay: 3000 });
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+        t.show();
+      }
+    });
   });
 </script>
 </body>

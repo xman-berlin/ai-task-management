@@ -3,17 +3,20 @@ package at.geise.test.springboot4test.controller;
 import at.geise.test.springboot4test.domain.Task;
 import at.geise.test.springboot4test.dto.TaskDto;
 import at.geise.test.springboot4test.service.TaskService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.UUID;
 
@@ -25,9 +28,7 @@ public class UiController {
     private final TaskService service;
 
     @GetMapping
-    public String index() {
-        return "index";
-    }
+    public String index() { return "index"; }
 
     @GetMapping("/list")
     public String list(@RequestParam(required = false) Integer page,
@@ -47,8 +48,9 @@ public class UiController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String create(@Valid TaskDto dto, Model model) {
+    public String create(@Valid TaskDto dto, Model model, HttpServletResponse response) {
         service.create(dto);
+        response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task created successfully\"}} ");
         return list(0, 20, null, null, model);
     }
 
@@ -61,14 +63,34 @@ public class UiController {
     }
 
     @PostMapping(value = "/{id}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String update(@PathVariable UUID id, @Valid TaskDto dto, Model model) {
+    public String update(@PathVariable UUID id, @Valid TaskDto dto, Model model, HttpServletResponse response) {
         service.update(id, dto);
+        response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task updated successfully\"}} ");
         return list(0, 20, null, null, model);
     }
 
     @PostMapping(value = "/{id}/delete")
-    public String delete(@PathVariable UUID id, Model model) {
+    public String delete(@PathVariable UUID id, Model model, HttpServletResponse response) {
         service.delete(id);
+        response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task deleted\"}} ");
         return list(0, 20, null, null, model);
+    }
+
+    // Validation error handler for HTMX: return a toast fragment with error message
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleValidation(MethodArgumentNotValidException ex, Model model) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> {
+                    String field = err.getField();
+                    String msg = err.getDefaultMessage();
+                    return (field != null ? field + ": " : "") + (msg != null ? msg : "Invalid value");
+                })
+                .distinct()
+                .reduce((a, b) -> a + "\n" + b)
+                .orElse("Validation error");
+        model.addAttribute("message", message);
+        model.addAttribute("type", "danger");
+        return "fragments/toast :: toast(message=${message}, type=${type})";
     }
 }
