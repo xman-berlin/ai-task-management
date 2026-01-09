@@ -138,18 +138,205 @@ public class AiService {
     }
 
     public DecompositionSuggestion decompose(AiTaskSuggestionRequest request) {
-        // stub: split by sentences if available
+        try {
+            String prompt = String.format("""
+                You are an expert project manager helping break down tasks into manageable subtasks.
+                
+                Analyze this task and suggest 3-5 actionable subtasks to complete it.
+                
+                Task Details:
+                - Title: %s
+                - Description: %s
+                - Due Date: %s
+                
+                Consider:
+                1. Logical sequence of steps
+                2. Dependencies between subtasks
+                3. Clarity and actionability
+                4. Reasonable scope for each subtask
+                
+                Respond ONLY with a JSON object in this exact format:
+                {
+                  "subtasks": [
+                    "First actionable subtask",
+                    "Second actionable subtask",
+                    "Third actionable subtask"
+                  ]
+                }
+                """,
+                request.title() != null ? request.title() : "No title",
+                request.description() != null ? request.description() : "No description",
+                request.dueDate() != null ? request.dueDate().toString() : "Not set"
+            );
+
+            Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                    Map.of("role", "system", "content", "You are a helpful project management assistant."),
+                    Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", temperature,
+                "max_tokens", maxTokens
+            );
+
+            String response = aiWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+            log.info("AI decomposition response: {}", response);
+
+            return parseDecompositionResponse(response);
+
+        } catch (Exception e) {
+            log.warn("AI decomposition failed, falling back to generic subtasks: {}", e.getMessage());
+            return fallbackDecompose(request);
+        }
+    }
+
+    private DecompositionSuggestion parseDecompositionResponse(String response) {
+        try {
+            JsonNode root = objectMapper.readTree(response);
+            String content = root.path("choices")
+                .get(0)
+                .path("message")
+                .path("content")
+                .asText();
+
+            log.debug("Extracted decomposition content: {}", content);
+
+            String cleaned = content.trim()
+                .replaceAll("```json\\s*", "")
+                .replaceAll("```\\s*", "")
+                .trim();
+
+            JsonNode result = objectMapper.readTree(cleaned);
+            List<String> subtasks = new java.util.ArrayList<>();
+            result.path("subtasks").forEach(node -> subtasks.add(node.asText()));
+
+            return new DecompositionSuggestion(subtasks);
+
+        } catch (Exception e) {
+            log.warn("Failed to parse decomposition response: {}", e.getMessage());
+            return new DecompositionSuggestion(List.of("Break down this task", "Define acceptance criteria", "Complete implementation"));
+        }
+    }
+
+    private DecompositionSuggestion fallbackDecompose(AiTaskSuggestionRequest request) {
         List<String> subtasks = List.of(
-                "Clarify requirements for: " + request.title(),
-                "Identify owners and resources",
-                "Define acceptance criteria"
+            "Clarify requirements for: " + (request.title() != null ? request.title() : "this task"),
+            "Identify owners and resources",
+            "Define acceptance criteria",
+            "Create implementation plan",
+            "Review and test"
         );
         return new DecompositionSuggestion(subtasks);
     }
 
     public DeadlineSuggestion predictDeadline(AiTaskSuggestionRequest request) {
-        LocalDateTime suggested = LocalDateTime.now().plusDays(7);
-        return new DeadlineSuggestion(suggested, "Stubbed +7 days suggestion");
+        try {
+            String prompt = String.format("""
+                You are an expert project manager helping estimate realistic deadlines.
+                
+                Analyze this task and suggest a realistic deadline based on its complexity and scope.
+                
+                Task Details:
+                - Title: %s
+                - Description: %s
+                - Current Date: %s
+                
+                Consider:
+                1. Task complexity and scope
+                2. Typical time needed for similar tasks
+                3. Buffer for unexpected issues
+                4. Realistic working pace
+                
+                Respond ONLY with a JSON object in this exact format:
+                {
+                  "days": 7,
+                  "rationale": "Brief explanation of why this timeline is realistic"
+                }
+                
+                Where 'days' is a number between 1 and 90 representing days from now.
+                """,
+                request.title() != null ? request.title() : "No title",
+                request.description() != null ? request.description() : "No description",
+                LocalDateTime.now().toString()
+            );
+
+            Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                    Map.of("role", "system", "content", "You are a helpful project management assistant."),
+                    Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", temperature,
+                "max_tokens", maxTokens
+            );
+
+            String response = aiWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
+            log.info("AI deadline prediction response: {}", response);
+
+            return parseDeadlineResponse(response);
+
+        } catch (Exception e) {
+            log.warn("AI deadline prediction failed, falling back to heuristic: {}", e.getMessage());
+            return fallbackDeadline(request);
+        }
+    }
+
+    private DeadlineSuggestion parseDeadlineResponse(String response) {
+        try {
+            JsonNode root = objectMapper.readTree(response);
+            String content = root.path("choices")
+                .get(0)
+                .path("message")
+                .path("content")
+                .asText();
+
+            log.debug("Extracted deadline content: {}", content);
+
+            String cleaned = content.trim()
+                .replaceAll("```json\\s*", "")
+                .replaceAll("```\\s*", "")
+                .trim();
+
+            JsonNode result = objectMapper.readTree(cleaned);
+            int days = result.path("days").asInt(7);
+            String rationale = result.path("rationale").asText("AI suggested deadline");
+
+            LocalDateTime suggestedDeadline = LocalDateTime.now().plusDays(days);
+            return new DeadlineSuggestion(suggestedDeadline, rationale);
+
+        } catch (Exception e) {
+            log.warn("Failed to parse deadline response: {}", e.getMessage());
+            LocalDateTime suggested = LocalDateTime.now().plusDays(7);
+            return new DeadlineSuggestion(suggested, "Default 7-day timeline");
+        }
+    }
+
+    private DeadlineSuggestion fallbackDeadline(AiTaskSuggestionRequest request) {
+        int days = 7;
+        String rationale = "Standard 1-week timeline (AI unavailable)";
+
+        if (request.description() != null && request.description().length() > 500) {
+            days = 14;
+            rationale = "Complex task, 2-week timeline recommended";
+        } else if (request.title() != null && request.title().toLowerCase().contains("urgent")) {
+            days = 3;
+            rationale = "Urgent task, 3-day timeline";
+        }
+
+        LocalDateTime suggested = LocalDateTime.now().plusDays(days);
+        return new DeadlineSuggestion(suggested, rationale);
     }
 
     public record PrioritySuggestion(Task.Priority priority, String rationale) {}
