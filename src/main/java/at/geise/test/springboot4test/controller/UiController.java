@@ -31,13 +31,20 @@ public class UiController {
     public String index() { return "index"; }
 
     @GetMapping("/list")
-    public String list(@RequestParam(required = false) Integer page,
-                       @RequestParam(required = false) Integer size,
+    public String list(@RequestParam(required = false, defaultValue = "0") Integer page,
+                       @RequestParam(required = false, defaultValue = "10") Integer size,
                        @RequestParam(required = false) Task.Status status,
                        @RequestParam(required = false) Task.Priority priority,
+                       @RequestParam(required = false, defaultValue = "createdAt") String sort,
+                       @RequestParam(required = false, defaultValue = "DESC") String direction,
                        Model model) {
-        Page<Task> tasks = service.list(page, size, status, priority);
+        Page<Task> tasks = service.list(page, size, status, priority, sort, direction);
         model.addAttribute("tasks", tasks.getContent());
+        model.addAttribute("page", tasks);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortBy", sort);
+        model.addAttribute("sortDirection", direction);
         return "fragments/task-list :: list";
     }
 
@@ -51,7 +58,7 @@ public class UiController {
     public String create(@Valid TaskDto dto, Model model, HttpServletResponse response) {
         service.create(dto);
         response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task created successfully\"}} ");
-        return list(0, 20, null, null, model);
+        return list(0, 10, null, null, "createdAt", "DESC", model);
     }
 
     @GetMapping("/{id}")
@@ -66,14 +73,14 @@ public class UiController {
     public String update(@PathVariable UUID id, @Valid TaskDto dto, Model model, HttpServletResponse response) {
         service.update(id, dto);
         response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task updated successfully\"}} ");
-        return list(0, 20, null, null, model);
+        return list(0, 10, null, null, "createdAt", "DESC", model);
     }
 
     @PostMapping(value = "/{id}/delete")
     public String delete(@PathVariable UUID id, Model model, HttpServletResponse response) {
         service.delete(id);
         response.setHeader("HX-Trigger", "{\"toast\":{\"type\":\"success\",\"message\":\"Task deleted\"}} ");
-        return list(0, 20, null, null, model);
+        return list(0, 10, null, null, "createdAt", "DESC", model);
     }
 
     // Validation error handler for HTMX: return a toast fragment with error message

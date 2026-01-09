@@ -22,8 +22,10 @@ public class TaskRestController {
     public Page<Task> list(@RequestParam(required = false) Integer page,
                            @RequestParam(required = false) Integer size,
                            @RequestParam(required = false) Task.Status status,
-                           @RequestParam(required = false) Task.Priority priority) {
-        return service.list(page, size, status, priority);
+                           @RequestParam(required = false) Task.Priority priority,
+                           @RequestParam(required = false, defaultValue = "createdAt") String sort,
+                           @RequestParam(required = false, defaultValue = "DESC") String direction) {
+        return service.list(page, size, status, priority, sort, direction);
     }
 
     @GetMapping("/{id}")

@@ -6,6 +6,7 @@ import at.geise.test.springboot4test.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,8 +20,13 @@ public class TaskService {
 
     private final TaskRepository repository;
 
-    public Page<Task> list(Integer page, Integer size, Task.Status status, Task.Priority priority) {
-        PageRequest pr = PageRequest.of(page == null ? 0 : page, size == null ? 20 : size);
+    public Page<Task> list(Integer page, Integer size, Task.Status status, Task.Priority priority, String sortBy, String direction) {
+        PageRequest pr = PageRequest.of(
+                page == null ? 0 : page,
+                size == null ? 10 : size,
+                Sort.Direction.fromString(direction != null ? direction : "DESC"),
+                sortBy != null ? sortBy : "createdAt"
+        );
         if (status != null) {
             return repository.findByStatus(status, pr);
         }

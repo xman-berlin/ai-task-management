@@ -2,7 +2,8 @@
     <form th:object="${task}"
           th:attr="hx-post=${task.id} == null ? '/tasks' : @{/tasks/{id}(id=${task.id})}"
           hx-target="#task-list"
-          hx-swap="outerHTML">
+          hx-swap="outerHTML"
+          hx-on="htmx:afterSwap: closeTaskModal()">
         <input type="hidden" th:field="*{id}" />
         <div class="mb-3">
             <label class="form-label d-flex align-items-center justify-content-between">
@@ -166,6 +167,11 @@
         })
         .catch(err => { alert('AI deadline failed: ' + err.message); })
         .finally(() => { btn.disabled = false; btn.textContent = '⏱️ AI Deadline'; });
+    }
+
+    function closeTaskModal() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
+        if (modal) modal.hide();
     }
     </script>
 </div>

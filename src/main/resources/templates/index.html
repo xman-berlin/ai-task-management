@@ -16,7 +16,7 @@
     <!-- Toast container -->
     <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
-    <div id="task-list" hx-get="/tasks/list" hx-trigger="load" hx-target="#task-list"></div>
+    <div id="task-list" hx-get="/tasks/list" hx-trigger="load" hx-target="#task-list" hx-swap="outerHTML"></div>
 </div>
 
 <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
