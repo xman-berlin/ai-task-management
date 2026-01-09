@@ -20,11 +20,14 @@ spring:
         format_sql: true
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:sk-dummy-key-for-local-dev}
+      # Works with: OpenAI, Azure OpenAI, GitHub Copilot, Grok, OpenRouter, local models
+      api-key: ${AI_API_KEY:sk-dummy-key-for-local-dev}
+      base-url: ${AI_BASE_URL:https://api.openai.com}  # or https://api.x.ai for Grok
       chat:
         options:
-          model: gpt-4-turbo-preview
+          model: ${AI_MODEL:gpt-4-turbo-preview}  # or grok-beta, gpt-3.5-turbo, etc.
           temperature: 0.7
+          max-tokens: 500
 
 logging:
   level:
@@ -32,4 +35,5 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
     org.springframework.ai: DEBUG
+    at.geise.test.springboot4test.service: DEBUG
 
