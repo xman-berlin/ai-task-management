@@ -2,13 +2,14 @@ package at.geise.test.springboot4test.service;
 
 import at.geise.test.springboot4test.domain.Task;
 import at.geise.test.springboot4test.dto.TaskDto;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -19,7 +20,17 @@ import java.util.Map;
 @Slf4j
 public class AiService {
 
-    private final ChatClient.Builder chatClientBuilder;
+    private final WebClient aiWebClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${ai.api.model}")
+    private String model;
+
+    @Value("${ai.api.temperature}")
+    private double temperature;
+
+    @Value("${ai.api.max-tokens}")
+    private int maxTokens;
 
     private static final String PRIORITIZE_PROMPT = """
             You are an expert task manager helping prioritize work.
@@ -27,10 +38,10 @@ public class AiService {
             Analyze this task and suggest a priority level (LOW, MEDIUM, or HIGH) with a brief rationale.
             
             Task Details:
-            - Title: {title}
-            - Description: {description}
-            - Due Date: {dueDate}
-            - Current Date: {currentDate}
+            - Title: %s
+            - Description: %s
+            - Due Date: %s
+            - Current Date: %s
             
             Consider these factors:
             1. Urgency (how soon is the due date?)
@@ -47,24 +58,34 @@ public class AiService {
 
     public PrioritySuggestion prioritize(TaskDto dto) {
         try {
-            ChatClient chatClient = chatClientBuilder.build();
+            String prompt = String.format(
+                PRIORITIZE_PROMPT,
+                dto.title() != null ? dto.title() : "No title",
+                dto.description() != null ? dto.description() : "No description",
+                dto.dueDate() != null ? dto.dueDate().toString() : "Not set",
+                LocalDateTime.now().toString()
+            );
 
-            PromptTemplate template = new PromptTemplate(PRIORITIZE_PROMPT);
-            String prompt = template.render(Map.of(
-                "title", dto.title() != null ? dto.title() : "No title",
-                "description", dto.description() != null ? dto.description() : "No description",
-                "dueDate", dto.dueDate() != null ? dto.dueDate().toString() : "Not set",
-                "currentDate", LocalDateTime.now().toString()
-            ));
+            Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                    Map.of("role", "system", "content", "You are a helpful task management assistant."),
+                    Map.of("role", "user", "content", prompt)
+                ),
+                "temperature", temperature,
+                "max_tokens", maxTokens
+            );
 
-            String response = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content();
+            String response = aiWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
 
-            log.info("AI prioritization response: {}", response);
+            log.info("AI API response: {}", response);
 
-            return parsePriorityResponse(response);
+            return parseApiResponse(response);
 
         } catch (Exception e) {
             log.warn("AI prioritization failed, falling back to heuristic: {}", e.getMessage());
@@ -72,16 +93,26 @@ public class AiService {
         }
     }
 
-    private PrioritySuggestion parsePriorityResponse(String response) {
-        // Simple JSON parsing - in production use Jackson or similar
+    private PrioritySuggestion parseApiResponse(String response) {
         try {
-            String cleaned = response.trim()
+            JsonNode root = objectMapper.readTree(response);
+            String content = root.path("choices")
+                .get(0)
+                .path("message")
+                .path("content")
+                .asText();
+
+            log.debug("Extracted AI content: {}", content);
+
+            // Clean markdown code blocks if present
+            String cleaned = content.trim()
                 .replaceAll("```json\\s*", "")
                 .replaceAll("```\\s*", "")
                 .trim();
 
-            String priorityStr = extractJsonField(cleaned, "priority");
-            String rationale = extractJsonField(cleaned, "rationale");
+            JsonNode result = objectMapper.readTree(cleaned);
+            String priorityStr = result.path("priority").asText();
+            String rationale = result.path("rationale").asText();
 
             Task.Priority priority = Task.Priority.valueOf(priorityStr.toUpperCase());
             return new PrioritySuggestion(priority, rationale);
@@ -92,15 +123,6 @@ public class AiService {
         }
     }
 
-    private String extractJsonField(String json, String field) {
-        String pattern = "\"" + field + "\"\\s*:\\s*\"([^\"]+)\"";
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
-        java.util.regex.Matcher m = p.matcher(json);
-        if (m.find()) {
-            return m.group(1);
-        }
-        throw new IllegalArgumentException("Field " + field + " not found");
-    }
 
     private PrioritySuggestion fallbackPrioritize(TaskDto dto) {
         Task.Priority priority = Task.Priority.MEDIUM;
