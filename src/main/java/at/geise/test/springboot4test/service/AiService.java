@@ -1,7 +1,7 @@
 package at.geise.test.springboot4test.service;
 
 import at.geise.test.springboot4test.domain.Task;
-import at.geise.test.springboot4test.dto.TaskDto;
+import at.geise.test.springboot4test.dto.AiTaskSuggestionRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -56,13 +56,13 @@ public class AiService {
             }
             """;
 
-    public PrioritySuggestion prioritize(TaskDto dto) {
+    public PrioritySuggestion prioritize(AiTaskSuggestionRequest request) {
         try {
             String prompt = String.format(
                 PRIORITIZE_PROMPT,
-                dto.title() != null ? dto.title() : "No title",
-                dto.description() != null ? dto.description() : "No description",
-                dto.dueDate() != null ? dto.dueDate().toString() : "Not set",
+                request.title() != null ? request.title() : "No title",
+                request.description() != null ? request.description() : "No description",
+                request.dueDate() != null ? request.dueDate().toString() : "Not set",
                 LocalDateTime.now().toString()
             );
 
@@ -89,7 +89,7 @@ public class AiService {
 
         } catch (Exception e) {
             log.warn("AI prioritization failed, falling back to heuristic: {}", e.getMessage());
-            return fallbackPrioritize(dto);
+            return fallbackPrioritize(request);
         }
     }
 
@@ -124,30 +124,30 @@ public class AiService {
     }
 
 
-    private PrioritySuggestion fallbackPrioritize(TaskDto dto) {
+    private PrioritySuggestion fallbackPrioritize(AiTaskSuggestionRequest request) {
         Task.Priority priority = Task.Priority.MEDIUM;
         String rationale = "Defaulted to MEDIUM (AI unavailable)";
-        if (dto.dueDate() != null && dto.dueDate().isBefore(LocalDateTime.now().plus(2, ChronoUnit.DAYS))) {
+        if (request.dueDate() != null && request.dueDate().isBefore(LocalDateTime.now().plus(2, ChronoUnit.DAYS))) {
             priority = Task.Priority.HIGH;
             rationale = "Due in <48h";
-        } else if (dto.description() != null && dto.description().length() > 500) {
+        } else if (request.description() != null && request.description().length() > 500) {
             priority = Task.Priority.LOW;
             rationale = "Long description suggests research";
         }
         return new PrioritySuggestion(priority, rationale);
     }
 
-    public DecompositionSuggestion decompose(TaskDto dto) {
+    public DecompositionSuggestion decompose(AiTaskSuggestionRequest request) {
         // stub: split by sentences if available
         List<String> subtasks = List.of(
-                "Clarify requirements for: " + dto.title(),
+                "Clarify requirements for: " + request.title(),
                 "Identify owners and resources",
                 "Define acceptance criteria"
         );
         return new DecompositionSuggestion(subtasks);
     }
 
-    public DeadlineSuggestion predictDeadline(TaskDto dto) {
+    public DeadlineSuggestion predictDeadline(AiTaskSuggestionRequest request) {
         LocalDateTime suggested = LocalDateTime.now().plusDays(7);
         return new DeadlineSuggestion(suggested, "Stubbed +7 days suggestion");
     }

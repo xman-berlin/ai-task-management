@@ -1,0 +1,31 @@
+# AI Provider Configuration Template
+# Copy this file to .envrc and uncomment/fill in your actual values
+# .envrc is gitignored and will never be committed
+
+# Choose ONE provider and uncomment its section:
+
+# Option 1: OpenAI (most popular)
+# export AI_API_KEY="sk-your-openai-key-here"
+# export AI_BASE_URL="https://api.openai.com/v1"
+# export AI_MODEL="gpt-4-turbo-preview"
+
+# Option 2: Grok (xAI)
+# export AI_API_KEY="xai-your-grok-key-here"
+# export AI_BASE_URL="https://api.x.ai/v1"
+# export AI_MODEL="grok-beta"
+
+# Option 3: OpenRouter (100+ models, cheap)
+# export AI_API_KEY="sk-or-your-openrouter-key-here"
+# export AI_BASE_URL="https://openrouter.ai/api/v1"
+# export AI_MODEL="anthropic/claude-3-haiku"
+
+# Option 4: Local Ollama (free, private, no API key needed!)
+# export AI_BASE_URL="http://localhost:11434/v1"
+# export AI_MODEL="llama2"
+
+# After setting your values:
+# 1. Save this as .envrc (not .envrc.example)
+# 2. Run: direnv allow
+# 3. Check: env | grep AI_
+# 4. Start app: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
