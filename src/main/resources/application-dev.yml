@@ -18,15 +18,18 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-dummy-key-for-local-dev}
+      chat:
+        options:
+          model: gpt-4-turbo-preview
+          temperature: 0.7
 
 logging:
   level:
     root: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
-
-langchain4j:
-  open-ai:
-    api-key: ${OPENAI_API_KEY:dummy}
-    model-name: gpt-4-turbo
+    org.springframework.ai: DEBUG
 
