@@ -101,11 +101,29 @@ src/main/resources/
 
 See [PLAN.md](PLAN.md) for detailed project plan and roadmap.
 
+### GitHub Project Board
+
+Track development progress and upcoming features on our [Project Board](https://github.com/users/xman-berlin/projects/1).
+
+**Current Features in Development:**
+- 📝 [Comments & Activity Log](https://github.com/xman-berlin/ai-task-management/issues/9) - Enable team collaboration with commenting and audit trail
+- 🌳 [Subtasks & Task Hierarchy](https://github.com/xman-berlin/ai-task-management/issues/10) - Break down complex tasks with AI-powered decomposition
+- 🏷️ [Tags & Smart Filtering](https://github.com/xman-berlin/ai-task-management/issues/11) - Flexible categorization with AI auto-tagging
+
+## Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. Check the [Project Board](https://github.com/users/xman-berlin/projects/1) for open issues
+2. Look for issues labeled `good first issue` or `help wanted`
+3. Fork the repository and create a feature branch
+4. Make your changes and add tests
+5. Submit a pull request referencing the issue
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
 ## License
 
 [Add your license here]
 
-## Contributing
-
-[Add contributing guidelines]
 
