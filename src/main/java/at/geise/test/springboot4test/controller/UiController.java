@@ -116,4 +116,10 @@ public class UiController {
         model.addAttribute("comment", comment);
         return "fragments/task-activity :: comment";
     }
+
+    @DeleteMapping("/{taskId}/comments/{commentId}")
+    public String deleteComment(@PathVariable UUID taskId, @PathVariable UUID commentId) {
+        commentRepository.deleteById(commentId);
+        return "";
+    }
 }

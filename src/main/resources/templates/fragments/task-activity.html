@@ -32,13 +32,23 @@
                 </div>
 
                 <!-- Comments -->
-                <div th:each="comment : ${comments}" class="border-bottom pb-3 mb-3">
+                <div th:each="comment : ${comments}" class="border-bottom pb-3 mb-3" th:id="'comment-' + ${comment.id}">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <strong th:text="${comment.author}"></strong>
-                            <div class="mt-1" th:text="${comment.content}"></div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <strong th:text="${comment.author}"></strong>
+                                <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                            </div>
+                            <div class="mt-1" th:text="${comment.content}" th:id="'comment-content-' + ${comment.id}"></div>
                         </div>
-                        <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary"
+                                    th:attr="onclick='editComment(' + ${comment.id} + ')'">Edit</button>
+                            <button type="button" class="btn btn-outline-danger"
+                                    th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
+                                    hx-target="'#comment-' + ${comment.id}"
+                                    hx-swap="outerHTML swap:1s">Delete</button>
+                        </div>
                     </div>
                 </div>
 
@@ -61,3 +71,56 @@
     </div>
 </div>
 
+<script>
+function editComment(commentId) {
+    const contentEl = document.getElementById('comment-content-' + commentId);
+    if (!contentEl) return;
+
+    const content = contentEl.textContent;
+    const editForm = `
+        <textarea class="form-control form-control-sm" id="edit-text-${commentId}">${content}</textarea>
+        <div class="mt-2 gap-2 d-flex">
+            <button class="btn btn-sm btn-primary" onclick="saveComment('${commentId}')">Save</button>
+            <button class="btn btn-sm btn-secondary" onclick="cancelEdit('${commentId}', '${content}')">Cancel</button>
+        </div>
+    `;
+    contentEl.innerHTML = editForm;
+}
+
+function cancelEdit(commentId, originalContent) {
+    const contentEl = document.getElementById('comment-content-' + commentId);
+    if (contentEl) {
+        contentEl.textContent = originalContent;
+    }
+}
+
+function saveComment(commentId) {
+    const textarea = document.getElementById('edit-text-' + commentId);
+    if (!textarea) return;
+
+    const newContent = textarea.value;
+    // In a real app, you'd send this to the server via PUT /tasks/{taskId}/comments/{commentId}
+    const contentEl = document.getElementById('comment-content-' + commentId);
+    if (contentEl) {
+        contentEl.textContent = newContent;
+    }
+}
+
+function addReaction(commentId, emoji) {
+    const commentEl = document.getElementById('comment-' + commentId);
+    if (!commentEl) return;
+
+    let reactionsEl = commentEl.querySelector('.comment-reactions');
+    if (!reactionsEl) {
+        reactionsEl = document.createElement('div');
+        reactionsEl.className = 'comment-reactions mt-2';
+        commentEl.appendChild(reactionsEl);
+    }
+
+    const reactionBtn = document.createElement('button');
+    reactionBtn.className = 'btn btn-sm btn-light me-2';
+    reactionBtn.textContent = emoji + ' 1';
+    reactionBtn.onclick = () => addReaction(commentId, emoji);
+    reactionsEl.appendChild(reactionBtn);
+}
+</script>
