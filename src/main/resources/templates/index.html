@@ -4,15 +4,198 @@
     <meta charset="UTF-8">
     <title>Tasks</title>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <script th:src="@{/webjars/htmx.org/2.0.2/dist/htmx.min.js}"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --danger-color: #ff6b6b;
+            --success-color: #51cf66;
+            --bg-color: #f8f9fa;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .navbar-header {
+            background: white;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .navbar-header h1 {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+
+        .btn-new-task {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-new-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            color: white;
+        }
+
+        .btn-new-task i {
+            margin-right: 0.5rem;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .modal-header {
+            background: var(--primary-gradient);
+            border-radius: 12px 12px 0 0;
+            color: white;
+            border: none;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            border-radius: 6px;
+        }
+
+        .btn-outline-secondary {
+            border-color: #dee2e6;
+            color: #495057;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f8f9fa;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge {
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+        }
+
+        .edit-comment-btn, .delete-btn {
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .edit-comment-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .toast {
+            border-radius: 8px;
+            border: none;
+            box-shadow: var(--card-shadow);
+        }
+
+        .text-bg-success {
+            background: var(--success-color) !important;
+        }
+
+        .text-bg-danger {
+            background: var(--danger-color) !important;
+        }
+
+        .text-bg-warning {
+            background: #ffa94d !important;
+        }
+
+        form .form-control, form .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        form .form-control:focus, form .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        form .form-label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+    </style>
 </head>
 <body class="bg-light">
-<div class="container py-4">
-    <div class="d-flex align-items-center mb-3">
-        <h1 class="h3 mb-0">Tasks</h1>
-        <button class="btn btn-primary ms-auto" hx-get="/tasks/new" hx-target="#modal-body" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#taskModal">New Task</button>
+<div class="navbar-header">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+            <h1 class="mb-0"><i class="bi bi-check2-circle"></i> Tasks</h1>
+            <button class="btn btn-new-task" hx-get="/tasks/new" hx-target="#modal-body" hx-trigger="click" data-bs-toggle="modal" data-bs-target="#taskModal">
+                <i class="bi bi-plus-circle"></i> New Task
+            </button>
+        </div>
     </div>
+</div>
 
+<div class="container">
     <!-- Toast container -->
     <div id="toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
@@ -23,7 +206,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Task</h5>
+        <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Task</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="modal-body">

@@ -5,50 +5,48 @@
           hx-swap="outerHTML"
           hx-on="htmx:afterSwap: closeTaskModal()">
         <input type="hidden" th:field="*{id}" />
-        <div class="mb-3">
-            <label class="form-label d-flex align-items-center justify-content-between">
-                <span>Title</span>
-            </label>
-            <input id="task-title" class="form-control" type="text" th:field="*{title}" required maxlength="255" />
+        <div class="mb-4">
+            <label class="form-label"><i class="bi bi-type"></i> Title</label>
+            <input id="task-title" class="form-control" type="text" th:field="*{title}" required maxlength="255" placeholder="Enter task title" />
         </div>
-        <div class="mb-3">
+        <div class="mb-4">
             <label class="form-label d-flex align-items-center justify-content-between">
-                <span>Description</span>
-                <button type="button" class="btn btn-sm btn-outline-info" id="ai-decompose-btn" onclick="decomposeTask()">
-                    🔧 AI Decompose
+                <span><i class="bi bi-file-text"></i> Description</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="ai-decompose-btn" onclick="decomposeTask()" style="border-radius: 6px;">
+                    <i class="bi bi-lightning-charge"></i> AI Decompose
                 </button>
             </label>
-            <textarea id="task-description" class="form-control" rows="3" maxlength="4000" th:field="*{description}"></textarea>
+            <textarea id="task-description" class="form-control" rows="3" maxlength="4000" th:field="*{description}" placeholder="Add task details..."></textarea>
             <small id="ai-decompose-note" class="form-text text-muted" style="display:none;"></small>
         </div>
-        <div class="row mb-3">
+        <div class="row mb-4">
             <div class="col">
                 <label class="form-label d-flex align-items-center justify-content-between">
-                    <span>Priority</span>
-                    <button type="button" class="btn btn-sm btn-outline-info" id="ai-suggest-btn" onclick="suggestPriority()">
-                        💡 AI Suggest
+                    <span><i class="bi bi-exclamation-circle"></i> Priority</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="ai-suggest-btn" onclick="suggestPriority()" style="border-radius: 6px;">
+                        <i class="bi bi-lightbulb"></i> AI Suggest
                     </button>
                 </label>
                 <select id="task-priority" class="form-select" th:field="*{priority}">
-                    <option value="LOW">LOW</option>
-                    <option value="MEDIUM">MEDIUM</option>
-                    <option value="HIGH">HIGH</option>
+                    <option value="LOW"><i class="bi bi-info-circle"></i> Low</option>
+                    <option value="MEDIUM"><i class="bi bi-exclamation-triangle"></i> Medium</option>
+                    <option value="HIGH"><i class="bi bi-exclamation-circle-fill"></i> High</option>
                 </select>
                 <small id="ai-rationale" class="form-text text-muted" style="display:none;"></small>
             </div>
             <div class="col">
-                <label class="form-label">Status</label>
+                <label class="form-label"><i class="bi bi-circle-half"></i> Status</label>
                 <select class="form-select" th:field="*{status}">
-                    <option value="TODO">TODO</option>
-                    <option value="IN_PROGRESS">IN_PROGRESS</option>
-                    <option value="DONE">DONE</option>
+                    <option value="TODO">To Do</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="DONE">Done</option>
                 </select>
             </div>
             <div class="col">
                 <label class="form-label d-flex align-items-center justify-content-between">
-                    <span>Due Date</span>
-                    <button type="button" class="btn btn-sm btn-outline-info" id="ai-deadline-btn" onclick="suggestDeadline()">
-                        ⏱️ AI Deadline
+                    <span><i class="bi bi-calendar-check"></i> Due Date</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="ai-deadline-btn" onclick="suggestDeadline()" style="border-radius: 6px;">
+                        <i class="bi bi-clock-history"></i> AI Deadline
                     </button>
                 </label>
                 <input id="task-duedate" class="form-control" type="datetime-local" name="dueDate"
@@ -57,8 +55,12 @@
             </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; border: none;">
+                <i class="bi bi-x-circle"></i> Close
+            </button>
+            <button type="submit" class="btn btn-primary" style="border-radius: 8px; border: none;">
+                <i class="bi bi-check-circle-fill"></i> Save
+            </button>
         </div>
     </form>
 

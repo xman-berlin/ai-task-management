@@ -10,7 +10,9 @@
                     <label class="form-label">Add Comment</label>
                     <textarea class="form-control" name="text" rows="2" placeholder="Share your thoughts..." required maxlength="1000"></textarea>
                 </div>
-                <button type="submit" class="btn btn-sm btn-primary">Post Comment</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 8px; border: none;">
+                    <i class="bi bi-send-fill"></i> Post
+                </button>
             </form>
 
             <!-- Activity Feed -->
@@ -53,12 +55,17 @@
                             </div>
                         </div>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-sm btn-primary edit-comment-btn">Edit</button>
-                            <button type="button" class="btn btn-sm btn-danger"
+                            <button type="button" class="btn btn-sm btn-primary edit-comment-btn" style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem;" title="Edit comment">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem; margin-left: 0.25rem;"
                                     th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
                                     hx-target="#task-activity"
                                     hx-swap="innerHTML"
-                                    hx-confirm="Are you sure you want to delete this comment?">Delete</button>
+                                    hx-confirm="Are you sure you want to delete this comment?"
+                                    title="Delete comment">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -93,12 +100,17 @@
             </div>
         </div>
         <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-sm btn-primary edit-comment-btn">Edit</button>
-            <button type="button" class="btn btn-sm btn-danger"
+            <button type="button" class="btn btn-sm btn-primary edit-comment-btn" style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem;" title="Edit comment">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem; margin-left: 0.25rem;"
                     th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
                     hx-target="#task-activity"
                     hx-swap="innerHTML"
-                    hx-confirm="Are you sure you want to delete this comment?">Delete</button>
+                    hx-confirm="Are you sure you want to delete this comment?"
+                    title="Delete comment">
+                <i class="bi bi-trash-fill"></i>
+            </button>
         </div>
     </div>
 </div>

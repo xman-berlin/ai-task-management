@@ -1,54 +1,84 @@
 <div th:fragment="list" id="task-list">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Tasks</h5>
-        <small class="text-muted" th:text="|Page ${currentPage + 1} of ${page.totalPages} (${page.totalElements} total)|"></small>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> Task List</h5>
+            <small class="text-muted" th:text="|Page ${currentPage + 1} of ${page.totalPages} • ${page.totalElements} total|"></small>
+        </div>
     </div>
 
-    <table class="table table-striped align-middle">
-        <thead>
+    <div class="table-responsive">
+    <table class="table table-hover align-middle" style="border-radius: 12px; overflow: hidden;">
+        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
         <tr>
-            <th style="cursor: pointer;"><a
+            <th style="cursor: pointer; border: none;"><a
                     th:href="@{/tasks/list(page=0, size=${pageSize}, sort='title', direction=${sortBy=='title' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
                     th:hx-get="@{/tasks/list(page=0, size=${pageSize}, sort='title', direction=${sortBy=='title' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
-                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-dark">Title <span th:if="${sortBy=='title'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}"></span></a></th>
-            <th style="cursor: pointer;"><a
+                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-white"><i class="bi bi-type"></i> Title <span th:if="${sortBy=='title'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}" style="margin-left: 0.3rem;"></span></a></th>
+            <th style="cursor: pointer; border: none;"><a
                     th:href="@{/tasks/list(page=0, size=${pageSize}, sort='priority', direction=${sortBy=='priority' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
                     th:hx-get="@{/tasks/list(page=0, size=${pageSize}, sort='priority', direction=${sortBy=='priority' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
-                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-dark">Priority <span th:if="${sortBy=='priority'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}"></span></a></th>
-            <th style="cursor: pointer;"><a
+                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-white"><i class="bi bi-exclamation-circle"></i> Priority <span th:if="${sortBy=='priority'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}" style="margin-left: 0.3rem;"></span></a></th>
+            <th style="cursor: pointer; border: none;"><a
                     th:href="@{/tasks/list(page=0, size=${pageSize}, sort='status', direction=${sortBy=='status' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
                     th:hx-get="@{/tasks/list(page=0, size=${pageSize}, sort='status', direction=${sortBy=='status' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
-                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-dark">Status <span th:if="${sortBy=='status'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}"></span></a></th>
-            <th style="cursor: pointer;"><a
+                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-white"><i class="bi bi-circle-half"></i> Status <span th:if="${sortBy=='status'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}" style="margin-left: 0.3rem;"></span></a></th>
+            <th style="cursor: pointer; border: none;"><a
                     th:href="@{/tasks/list(page=0, size=${pageSize}, sort='dueDate', direction=${sortBy=='dueDate' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
                     th:hx-get="@{/tasks/list(page=0, size=${pageSize}, sort='dueDate', direction=${sortBy=='dueDate' && sortDirection=='ASC' ? 'DESC' : 'ASC'})}"
-                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-dark">Due <span th:if="${sortBy=='dueDate'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}"></span></a></th>
-            <th></th>
+                    hx-target="#task-list" hx-swap="outerHTML" class="text-decoration-none text-white"><i class="bi bi-calendar-check"></i> Due <span th:if="${sortBy=='dueDate'}" th:text="${sortDirection=='ASC' ? '↑' : '↓'}" style="margin-left: 0.3rem;"></span></a></th>
+            <th style="border: none; text-align: right;">Actions</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="task : ${tasks}">
-            <td th:text="${task.title}"></td>
-            <td th:text="${task.priority}"></td>
-            <td th:text="${task.status}"></td>
-            <td th:text="${#temporals.format(task.dueDate, 'yyyy-MM-dd HH:mm')}"></td>
-            <td class="text-end">
-                <button class="btn btn-sm btn-outline-primary"
+        <tr th:each="task : ${tasks}" style="border-bottom: 1px solid #f0f0f0;">
+            <td style="border: none;"><strong th:text="${task.title}"></strong></td>
+            <td style="border: none;">
+                <span th:if="${task.priority == 'HIGH'}" class="badge bg-danger" style="font-size: 0.85rem;">
+                    <i class="bi bi-exclamation-circle"></i> High
+                </span>
+                <span th:if="${task.priority == 'MEDIUM'}" class="badge bg-warning text-dark" style="font-size: 0.85rem;">
+                    <i class="bi bi-exclamation-triangle"></i> Medium
+                </span>
+                <span th:if="${task.priority == 'LOW'}" class="badge bg-info" style="font-size: 0.85rem;">
+                    <i class="bi bi-info-circle"></i> Low
+                </span>
+            </td>
+            <td style="border: none;">
+                <span th:if="${task.status == 'TODO'}" class="badge bg-secondary" style="font-size: 0.85rem;">
+                    <i class="bi bi-circle"></i> Todo
+                </span>
+                <span th:if="${task.status == 'IN_PROGRESS'}" class="badge bg-primary" style="font-size: 0.85rem;">
+                    <i class="bi bi-hourglass-split"></i> In Progress
+                </span>
+                <span th:if="${task.status == 'DONE'}" class="badge bg-success" style="font-size: 0.85rem;">
+                    <i class="bi bi-check-circle"></i> Done
+                </span>
+            </td>
+            <td style="border: none;"><small th:text="${#temporals.format(task.dueDate, 'MMM dd, yyyy')}"></small></td>
+            <td style="border: none; text-end;">
+                <button class="btn btn-sm btn-primary"
+                        title="Edit task"
                         th:attr="hx-get=@{/tasks/{id}(id=${task.id})}"
                         hx-target="#modal-body"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#taskModal">Edit</button>
-                <button class="btn btn-sm btn-outline-danger"
+                        data-bs-target="#taskModal"
+                        style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem;">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-sm btn-danger"
+                        title="Delete task"
                         th:attr="hx-post=@{/tasks/{id}/delete(id=${task.id})}"
                         hx-target="#task-list"
-                        hx-swap="outerHTML">
-                    Delete
+                        hx-swap="outerHTML"
+                        style="border-radius: 6px; border: none; padding: 0.4rem 0.6rem; margin-left: 0.25rem;">
+                    <i class="bi bi-trash-fill"></i>
                 </button>
             </td>
         </tr>
         </tbody>
     </table>
+    </div>
 
     <!-- Pagination Controls -->
     <nav aria-label="Task list pagination" class="mt-4">
@@ -57,13 +87,13 @@
                 <a class="page-link"
                    th:href="@{/tasks/list(page=0, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
                    th:hx-get="@{/tasks/list(page=0, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
-                   hx-target="#task-list" hx-swap="outerHTML">First</a>
+                   hx-target="#task-list" hx-swap="outerHTML"><i class="bi bi-chevron-double-left"></i> First</a>
             </li>
             <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
                 <a class="page-link"
                    th:href="@{/tasks/list(page=${currentPage - 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
                    th:hx-get="@{/tasks/list(page=${currentPage - 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
-                   hx-target="#task-list" hx-swap="outerHTML">Previous</a>
+                   hx-target="#task-list" hx-swap="outerHTML"><i class="bi bi-chevron-left"></i> Prev</a>
             </li>
             <li class="page-item active">
                 <span class="page-link" th:text="|${currentPage + 1} / ${page.totalPages}|"></span>
@@ -72,13 +102,13 @@
                 <a class="page-link"
                    th:href="@{/tasks/list(page=${currentPage + 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
                    th:hx-get="@{/tasks/list(page=${currentPage + 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
-                   hx-target="#task-list" hx-swap="outerHTML">Next</a>
+                   hx-target="#task-list" hx-swap="outerHTML">Next <i class="bi bi-chevron-right"></i></a>
             </li>
             <li class="page-item" th:classappend="${currentPage == page.totalPages - 1 ? 'disabled' : ''}">
                 <a class="page-link"
                    th:href="@{/tasks/list(page=${page.totalPages - 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
                    th:hx-get="@{/tasks/list(page=${page.totalPages - 1}, size=${pageSize}, sort=${sortBy}, direction=${sortDirection})}"
-                   hx-target="#task-list" hx-swap="outerHTML">Last</a>
+                   hx-target="#task-list" hx-swap="outerHTML">Last <i class="bi bi-chevron-double-right"></i></a>
             </li>
         </ul>
     </nav>
