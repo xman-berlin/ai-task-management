@@ -2,6 +2,8 @@ package at.geise.test.springboot4test.controller;
 
 import at.geise.test.springboot4test.domain.Task;
 import at.geise.test.springboot4test.dto.TaskDto;
+import at.geise.test.springboot4test.repository.ActivityLogRepository;
+import at.geise.test.springboot4test.repository.CommentRepository;
 import at.geise.test.springboot4test.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,6 +28,8 @@ import java.util.UUID;
 public class UiController {
 
     private final TaskService service;
+    private final ActivityLogRepository activityLogRepository;
+    private final CommentRepository commentRepository;
 
     @GetMapping
     public String index() { return "index"; }
@@ -66,6 +70,8 @@ public class UiController {
         Task task = service.get(id);
         TaskDto dto = new TaskDto(task.getId(), task.getTitle(), task.getDescription(), task.getPriority(), task.getStatus(), task.getDueDate());
         model.addAttribute("task", dto);
+        model.addAttribute("activityLogs", activityLogRepository.findByTaskOrderByTimestampDesc(task));
+        model.addAttribute("comments", commentRepository.findByTaskOrderByCreatedAtAsc(task));
         return "fragments/task-form :: form";
     }
 
@@ -99,5 +105,15 @@ public class UiController {
         model.addAttribute("message", message);
         model.addAttribute("type", "danger");
         return "fragments/toast :: toast(message=${message}, type=${type})";
+    }
+
+    @PostMapping("/{id}/comments")
+    public String createComment(@PathVariable UUID id, @RequestParam String text, Model model) {
+        Task task = service.get(id);
+        at.geise.test.springboot4test.domain.Comment comment = new at.geise.test.springboot4test.domain.Comment(task, text, "User");
+        comment = commentRepository.save(comment);
+
+        model.addAttribute("comment", comment);
+        return "fragments/task-activity :: comment";
     }
 }

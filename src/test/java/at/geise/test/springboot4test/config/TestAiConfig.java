@@ -1,26 +1,21 @@
 package at.geise.test.springboot4test.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-@Profile("!test")
-public class AiConfig {
-
-    @Value("${ai.api.key:sk-dummy}")
-    private String apiKey;
-
-    @Value("${ai.api.base-url:https://api.openai.com/v1}")
-    private String baseUrl;
+@Profile("test")
+public class TestAiConfig {
 
     @Bean
+    @Primary
     public WebClient aiWebClient() {
         return WebClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .baseUrl("http://localhost:8080")
+                .defaultHeader("Authorization", "Bearer test-key")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }

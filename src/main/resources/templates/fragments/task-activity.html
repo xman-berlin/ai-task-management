@@ -1,0 +1,63 @@
+<div th:fragment="activity" id="task-activity">
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0">Activity Log & Comments</h6>
+        </div>
+        <div class="card-body">
+            <!-- Add Comment Form -->
+            <form id="comment-form" class="mb-4" th:attr="hx-post=@{/tasks/{id}/comments(id=${task.id})}" hx-target="#activity-feed" hx-swap="beforeend" hx-on="htmx:afterSwap: this.reset()">
+                <div class="mb-3">
+                    <label class="form-label">Add Comment</label>
+                    <textarea class="form-control" name="text" rows="2" placeholder="Share your thoughts..." required maxlength="1000"></textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Post Comment</button>
+            </form>
+
+            <!-- Activity Feed -->
+            <div id="activity-feed">
+                <!-- Activity Logs -->
+                <div th:each="log : ${activityLogs}" class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong th:text="${log.action}"></strong>
+                            <small class="text-muted" th:text="${log.author}"></small>
+                        </div>
+                        <small class="text-muted" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm')}"></small>
+                    </div>
+                    <div class="mt-2" th:if="${log.oldValue != null or log.newValue != null}">
+                        <span th:if="${log.oldValue != null}" class="badge bg-light text-dark" th:text="${log.oldValue}"></span>
+                        <span class="text-muted">→</span>
+                        <span th:if="${log.newValue != null}" class="badge bg-info" th:text="${log.newValue}"></span>
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div th:each="comment : ${comments}" class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong th:text="${comment.author}"></strong>
+                            <div class="mt-1" th:text="${comment.content}"></div>
+                        </div>
+                        <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(activityLogs) and #lists.isEmpty(comments)}" class="text-center text-muted py-4">
+                    <p>No activity or comments yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Single Comment Fragment for HTMX Response -->
+<div th:fragment="comment" class="border-bottom pb-3 mb-3">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <strong th:text="${comment.author}"></strong>
+            <div class="mt-1" th:text="${comment.content}"></div>
+        </div>
+        <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+    </div>
+</div>
+

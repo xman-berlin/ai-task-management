@@ -1,8 +1,6 @@
 package at.geise.test.springboot4test.domain;
 
-import at.geise.test.springboot4test.config.TaskChangeListener;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,40 +14,38 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tasks")
-@EntityListeners(TaskChangeListener.class)
+@Table(name = "comments")
 @Getter
 @Setter
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Task {
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
 
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", nullable = false)
+    Task task;
+
     @NotBlank
-    @Size(max = 255)
-    String title;
+    @Size(max = 1000)
+    String content;
 
-    @Size(max = 4000)
-    String description;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    Priority priority = Priority.MEDIUM;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    Status status = Status.TODO;
-
-    @FutureOrPresent
-    LocalDateTime dueDate;
+    @NotBlank
+    @Size(max = 100)
+    String author = "Anonymous"; // For now, we'll use a default author
 
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt;
 
-    public enum Priority { LOW, MEDIUM, HIGH }
-    public enum Status { TODO, IN_PROGRESS, DONE }
+    public Comment(Task task, String content, String author) {
+        this.task = task;
+        this.content = content;
+        this.author = author != null ? author : "Anonymous";
+    }
 }
+

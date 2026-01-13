@@ -56,11 +56,16 @@
                 <small id="ai-deadline-note" class="form-text text-muted" style="display:none;"></small>
             </div>
         </div>
-        <div class="d-flex justify-content-end gap-2">
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-4 border-top">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="submit" class="btn btn-primary">Save</button>
         </div>
     </form>
+
+    <!-- Activity Log & Comments -->
+    <div th:if="${task.id}" class="mt-4">
+        <div th:replace="fragments/task-activity :: activity"></div>
+    </div>
 
     <script>
     function asIsoLocal(datetimeStr) {

@@ -30,6 +30,9 @@ class TaskServiceTest {
     @Mock
     private TaskRepository repository;
 
+    @Mock
+    private ActivityLogService activityLogService;
+
     @InjectMocks
     private TaskService service;
 
@@ -196,6 +199,7 @@ class TaskServiceTest {
         assertThat(result.getUpdatedAt()).isNotNull();
         verify(repository).findById(testId);
         verify(repository).save(testTask);
+        verify(activityLogService).logTaskUpdated(any(Task.class), any(), any(), any(), any(), any(), any(TaskDto.class));
     }
 
     @Test

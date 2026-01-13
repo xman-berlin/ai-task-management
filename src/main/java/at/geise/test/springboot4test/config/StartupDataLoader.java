@@ -1,8 +1,10 @@
 package at.geise.test.springboot4test.config;
 
+import at.geise.test.springboot4test.domain.Comment;
 import at.geise.test.springboot4test.domain.Task;
 import at.geise.test.springboot4test.domain.Task.Priority;
 import at.geise.test.springboot4test.domain.Task.Status;
+import at.geise.test.springboot4test.repository.CommentRepository;
 import at.geise.test.springboot4test.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
@@ -19,6 +21,7 @@ import java.util.List;
 public class StartupDataLoader implements ApplicationRunner {
 
     private final TaskRepository taskRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -26,9 +29,12 @@ public class StartupDataLoader implements ApplicationRunner {
             return; // keep existing data
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        List<Task> seeds = List.of(
-                // Existing seeds
+        // Disable activity logging during startup data load
+        TaskChangeListener.setSkipLogging(true);
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            List<Task> seeds = List.of(
+                    // ...existing code...
                 build("AI roadmap draft", "Outline vision, milestones, and KPIs for first 12 months.", Priority.HIGH, Status.TODO, now.plusDays(7)),
                 build("MVP architecture", "Define service boundaries, data model, and security baselines.", Priority.HIGH, Status.IN_PROGRESS, now.plusDays(5)),
                 build("Model selection", "Compare GPT-4-turbo vs. local LLM for core agent tasks.", Priority.MEDIUM, Status.TODO, now.plusDays(10)),
@@ -54,9 +60,38 @@ public class StartupDataLoader implements ApplicationRunner {
                 build("Fine-tune intent classifier on latest support tickets", "Label dataset, train baseline, evaluate and iterate.", Priority.MEDIUM, Status.TODO, now.plusDays(9)),
                 build("Implement RAG pipeline for knowledge base search", "ETL docs, embed, index, retrieval, response synthesis.", Priority.MEDIUM, Status.TODO, now.plusDays(15)),
                 build("Rotate all production credentials and audit access", "Rotate keys/tokens, enforce least privilege, document changes.", Priority.HIGH, Status.TODO, now.plusDays(3))
-        );
+            );
 
-        taskRepository.saveAll(seeds);
+            taskRepository.saveAll(seeds);
+
+            // Add sample comments to each task
+            for (Task task : seeds) {
+                addSampleComments(task);
+            }
+        } finally {
+            // Re-enable activity logging after startup data load
+            TaskChangeListener.setSkipLogging(false);
+        }
+    }
+
+    private void addSampleComments(Task task) {
+        String[] comments = {
+            "Started working on this task. Looking into the requirements.",
+            "Made good progress today. Almost halfway done.",
+            "Found a few blockers, discussing with team to resolve.",
+            "Great feedback from review. Implementing suggestions now.",
+            "Task completed and tested. Ready for merge."
+        };
+
+        for (int i = 0; i < comments.length; i++) {
+            Comment comment = new Comment(
+                task,
+                comments[i],
+                i % 2 == 0 ? "Alice" : "Bob"
+            );
+            comment.setCreatedAt(task.getCreatedAt().plusHours(i + 1));
+            commentRepository.save(comment);
+        }
     }
 
     private static Task build(String title, String description, Priority priority, Status status, LocalDateTime due) {

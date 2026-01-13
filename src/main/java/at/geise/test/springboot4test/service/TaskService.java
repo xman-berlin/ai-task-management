@@ -19,6 +19,7 @@ import java.util.UUID;
 public class TaskService {
 
     private final TaskRepository repository;
+    private final ActivityLogService activityLogService;
 
     public Page<Task> list(Integer page, Integer size, Task.Status status, Task.Priority priority, String sortBy, String direction) {
         PageRequest pr = PageRequest.of(
@@ -49,9 +50,22 @@ public class TaskService {
 
     public Task update(UUID id, TaskDto dto) {
         Task task = get(id);
+
+        // Track changes before applying updates
+        Task.Status oldStatus = task.getStatus();
+        Task.Priority oldPriority = task.getPriority();
+        String oldTitle = task.getTitle();
+        String oldDescription = task.getDescription();
+        LocalDateTime oldDueDate = task.getDueDate();
+
         apply(dto, task);
         task.setUpdatedAt(LocalDateTime.now());
-        return repository.save(task);
+        Task updatedTask = repository.save(task);
+
+        // Log changes
+        logChanges(task, oldStatus, oldPriority, oldTitle, oldDescription, oldDueDate, dto);
+
+        return updatedTask;
     }
 
     public void delete(UUID id) {
@@ -64,5 +78,10 @@ public class TaskService {
         task.setPriority(dto.priority());
         task.setStatus(dto.status());
         task.setDueDate(dto.dueDate());
+    }
+
+    private void logChanges(Task task, Task.Status oldStatus, Task.Priority oldPriority, String oldTitle, String oldDescription, LocalDateTime oldDueDate, TaskDto dto) {
+        // Implement logging logic here, e.g., using activityLogService
+        activityLogService.logTaskUpdated(task, oldStatus, oldPriority, oldTitle, oldDescription, oldDueDate, dto);
     }
 }
