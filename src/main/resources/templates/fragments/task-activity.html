@@ -40,6 +40,11 @@
                                 <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
                             </div>
                             <div class="mt-1" th:text="${comment.content}" th:id="'comment-content-' + ${comment.id}"></div>
+                            <!-- Display persisted reactions -->
+                            <div class="mt-2" th:id="'comment-reactions-display-' + ${comment.id}">
+                                <span th:each="reaction : ${comment.reactions}" class="badge bg-light text-dark me-2" style="cursor: pointer;" th:attr="onclick='addReaction(event, \''+${reaction.emoji}+'\')'" th:text="${reaction.emoji} + ' ' + ${reaction.count}"></span>
+                            </div>
+                            <!-- Add reaction buttons -->
                             <div class="mt-2 gap-2 d-flex" th:id="'comment-reactions-' + ${comment.id}">
                                 <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '👍')">👍</button>
                                 <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '❤️')">❤️</button>
@@ -48,12 +53,12 @@
                             </div>
                         </div>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-secondary"
-                                    th:attr="onclick='editComment(' + ${comment.id} + ')'">Edit</button>
-                            <button type="button" class="btn btn-outline-danger"
+                            <button type="button" class="btn btn-sm btn-primary edit-comment-btn">Edit</button>
+                            <button type="button" class="btn btn-sm btn-danger"
                                     th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
                                     hx-target="#task-activity"
-                                    hx-swap="innerHTML">Delete</button>
+                                    hx-swap="innerHTML"
+                                    hx-confirm="Are you sure you want to delete this comment?">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -67,54 +72,35 @@
 </div>
 
 <!-- Single Comment Fragment for HTMX Response -->
-<div th:fragment="comment" class="border-bottom pb-3 mb-3">
+<div th:fragment="comment" class="border-bottom pb-3 mb-3" th:id="'comment-' + ${comment.id}">
     <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <strong th:text="${comment.author}"></strong>
-            <div class="mt-1" th:text="${comment.content}"></div>
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2">
+                <strong th:text="${comment.author}"></strong>
+                <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+            </div>
+            <div class="mt-1" th:text="${comment.content}" th:id="'comment-content-' + ${comment.id}"></div>
+            <!-- Display persisted reactions -->
+            <div class="mt-2" th:id="'comment-reactions-display-' + ${comment.id}">
+                <span th:each="reaction : ${comment.reactions}" class="badge bg-light text-dark me-2" style="cursor: pointer;" th:attr="onclick='addReaction(event, \''+${reaction.emoji}+'\')'" th:text="${reaction.emoji} + ' ' + ${reaction.count}"></span>
+            </div>
+            <!-- Add reaction buttons -->
+            <div class="mt-2 gap-2 d-flex" th:id="'comment-reactions-' + ${comment.id}">
+                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '👍')">👍</button>
+                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '❤️')">❤️</button>
+                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '😂')">😂</button>
+                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '🎉')">🎉</button>
+            </div>
         </div>
-        <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-sm btn-primary edit-comment-btn">Edit</button>
+            <button type="button" class="btn btn-sm btn-danger"
+                    th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
+                    hx-target="#task-activity"
+                    hx-swap="innerHTML"
+                    hx-confirm="Are you sure you want to delete this comment?">Delete</button>
+        </div>
     </div>
 </div>
 
-<script>
-function editComment(commentId) {
-    const contentEl = document.getElementById('comment-content-' + commentId);
-    if (!contentEl) return;
-
-    const content = contentEl.textContent;
-    const editForm = `
-        <textarea class="form-control form-control-sm" id="edit-text-${commentId}">${content}</textarea>
-        <div class="mt-2 gap-2 d-flex">
-            <button class="btn btn-sm btn-primary" onclick="saveComment('${commentId}')">Save</button>
-            <button class="btn btn-sm btn-secondary" onclick="cancelEdit('${commentId}', '${content}')">Cancel</button>
-        </div>
-    `;
-    contentEl.innerHTML = editForm;
-}
-
-function cancelEdit(commentId, originalContent) {
-    const contentEl = document.getElementById('comment-content-' + commentId);
-    if (contentEl) {
-        contentEl.textContent = originalContent;
-    }
-}
-
-function saveComment(commentId) {
-    const textarea = document.getElementById('edit-text-' + commentId);
-    if (!textarea) return;
-
-    const newContent = textarea.value;
-    const contentEl = document.getElementById('comment-content-' + commentId);
-    if (contentEl) {
-        contentEl.textContent = newContent;
-    }
-}
-
-function addReaction(btn, emoji) {
-    const count = parseInt(btn.textContent.split(' ')[1]) || 0;
-    btn.textContent = emoji + ' ' + (count + 1);
-    btn.classList.add('active');
-}
-</script>
 

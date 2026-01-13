@@ -178,5 +178,21 @@
         const modal = bootstrap.Modal.getInstance(document.getElementById('taskModal'));
         if (modal) modal.hide();
     }
+
+    // Set task ID on modal for comment editing
+    document.addEventListener('DOMContentLoaded', function() {
+        const taskIdInput = document.querySelector('input[name="id"]');
+        if (taskIdInput && taskIdInput.value) {
+            document.getElementById('taskModal').setAttribute('data-task-id', taskIdInput.value);
+        }
+    });
+
+    // Also set it when form is loaded via HTMX
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        const taskIdInput = document.querySelector('input[name="id"]');
+        if (taskIdInput && taskIdInput.value) {
+            document.getElementById('taskModal').setAttribute('data-task-id', taskIdInput.value);
+        }
+    });
     </script>
 </div>

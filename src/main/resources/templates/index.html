@@ -101,6 +101,176 @@
       }
     });
   });
+
+  // Comment editing functions
+  document.body.addEventListener('click', function(e) {
+    if (e.target.classList.contains('edit-comment-btn')) {
+      editComment(e.target);
+    }
+  });
+
+  function editComment(btn) {
+    const commentDiv = btn.closest('[id^="comment-"]');
+    if (!commentDiv) return;
+
+    const commentId = commentDiv.id.replace('comment-', '');
+    const contentEl = document.getElementById('comment-content-' + commentId);
+    if (!contentEl) return;
+
+    const originalContent = contentEl.textContent.trim();
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'form-control form-control-sm mb-2';
+    textarea.id = 'edit-text-' + commentId;
+    textarea.style.minHeight = '60px';
+    textarea.value = originalContent;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'btn btn-sm btn-primary me-2';
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = function() { saveComment(commentId, originalContent); };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-sm btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = function() { cancelEdit(commentId, originalContent); };
+
+    const buttonDiv = document.createElement('div');
+    buttonDiv.className = 'gap-2 d-flex';
+    buttonDiv.appendChild(saveBtn);
+    buttonDiv.appendChild(cancelBtn);
+
+    contentEl.innerHTML = '';
+    contentEl.appendChild(textarea);
+    contentEl.appendChild(buttonDiv);
+    textarea.focus();
+  }
+
+  function cancelEdit(commentId, originalContent) {
+    const contentEl = document.getElementById('comment-content-' + commentId);
+    if (contentEl) {
+      contentEl.textContent = originalContent;
+    }
+  }
+
+  function saveComment(commentId, originalContent) {
+    const textarea = document.getElementById('edit-text-' + commentId);
+    if (!textarea) return;
+
+    const newContent = textarea.value.trim();
+    if (!newContent) {
+      alert('Comment cannot be empty');
+      return;
+    }
+
+    // Get task ID from the modal or URL
+    const modal = document.getElementById('taskModal');
+    const taskId = modal ? modal.getAttribute('data-task-id') : null;
+
+    if (!taskId) {
+      console.error('Task ID not found');
+      return;
+    }
+
+    // Send update to server
+    fetch(`/tasks/${taskId}/comments/${commentId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'content=' + encodeURIComponent(newContent)
+    })
+    .then(response => {
+      if (response.ok) {
+        const contentEl = document.getElementById('comment-content-' + commentId);
+        if (contentEl) {
+          contentEl.textContent = newContent;
+        }
+        makeToast('Comment updated successfully', 'success');
+      } else {
+        alert('Failed to save comment');
+        // Restore original content
+        const contentEl = document.getElementById('comment-content-' + commentId);
+        if (contentEl) {
+          contentEl.textContent = originalContent;
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error saving comment:', err);
+      alert('Error saving comment');
+      const contentEl = document.getElementById('comment-content-' + commentId);
+      if (contentEl) {
+        contentEl.textContent = originalContent;
+      }
+    });
+  }
+
+  function addReaction(btnOrEvent, emoji) {
+    // Handle both direct button click (btnOrEvent = button element) and event-based click (btnOrEvent = event)
+    let btn = btnOrEvent;
+    if (btnOrEvent && btnOrEvent.target) {
+      // It's an event object
+      btn = btnOrEvent.target;
+    }
+
+    // Get task ID and comment ID from DOM
+    const modal = document.getElementById('taskModal');
+    const taskId = modal ? modal.getAttribute('data-task-id') : null;
+
+    // Find the comment container - look for the exact pattern: id="comment-" followed by UUID (no hyphens in between)
+    // We need to traverse up to find the main comment div, not the reactions display div
+    let commentDiv = btn.closest('div[id^="comment-"]:not([id*="reactions"])');
+
+    // If that doesn't work, try finding any parent with comment- ID and extracting properly
+    if (!commentDiv) {
+      let parent = btn.parentElement;
+      while (parent) {
+        if (parent.id && parent.id.startsWith('comment-') && !parent.id.includes('reactions')) {
+          commentDiv = parent;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+
+    if (!commentDiv) {
+      console.error('Could not find comment container');
+      return;
+    }
+
+    // Extract just the UUID part (remove "comment-" prefix)
+    const commentId = commentDiv.id.substring(8); // "comment-" is 8 chars
+
+    if (!taskId || !commentId) {
+      console.error('Missing taskId or commentId', { taskId, commentId, divId: commentDiv.id });
+      return;
+    }
+
+    console.log('Adding reaction:', { taskId, commentId, emoji });
+
+    // Send to server
+    fetch(`/tasks/${taskId}/comments/${commentId}/reactions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: 'emoji=' + encodeURIComponent(emoji)
+    })
+    .then(response => {
+      if (response.ok) {
+        // Reload the entire activity section to get fresh reactions
+        htmx.ajax('GET', `/tasks/${taskId}`, '#task-activity');
+      } else {
+        console.error('Failed to save reaction, status:', response.status);
+      }
+    })
+    .catch(err => {
+      console.error('Error saving reaction:', err);
+    });
+  }
 </script>
 </body>
 </html>

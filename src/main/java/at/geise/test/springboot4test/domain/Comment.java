@@ -11,6 +11,8 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -41,6 +43,9 @@ public class Comment {
     LocalDateTime createdAt = LocalDateTime.now();
 
     LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    List<Reaction> reactions = new ArrayList<>();
 
     public Comment(Task task, String content, String author) {
         this.task = task;

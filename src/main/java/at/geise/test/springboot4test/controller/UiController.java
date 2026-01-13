@@ -4,6 +4,7 @@ import at.geise.test.springboot4test.domain.Task;
 import at.geise.test.springboot4test.dto.TaskDto;
 import at.geise.test.springboot4test.repository.ActivityLogRepository;
 import at.geise.test.springboot4test.repository.CommentRepository;
+import at.geise.test.springboot4test.repository.ReactionRepository;
 import at.geise.test.springboot4test.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class UiController {
     private final TaskService service;
     private final ActivityLogRepository activityLogRepository;
     private final CommentRepository commentRepository;
+    private final ReactionRepository reactionRepository;
 
     @GetMapping
     public String index() { return "index"; }
@@ -71,6 +73,7 @@ public class UiController {
         TaskDto dto = new TaskDto(task.getId(), task.getTitle(), task.getDescription(), task.getPriority(), task.getStatus(), task.getDueDate());
         model.addAttribute("task", dto);
         model.addAttribute("activityLogs", activityLogRepository.findByTaskOrderByTimestampDesc(task));
+        // Comments will auto-load reactions via OneToMany relationship
         model.addAttribute("comments", commentRepository.findByTaskOrderByCreatedAtAsc(task));
         return "fragments/task-form :: form";
     }
@@ -114,25 +117,53 @@ public class UiController {
         comment = commentRepository.save(comment);
 
         model.addAttribute("comment", comment);
+        model.addAttribute("task", task);
         return "fragments/task-activity :: comment";
     }
 
     @DeleteMapping("/{taskId}/comments/{commentId}")
-    public String deleteComment(@PathVariable UUID taskId, @PathVariable UUID commentId) {
+    public String deleteComment(@PathVariable UUID taskId, @PathVariable UUID commentId, Model model) {
+        Task task = service.get(taskId);
         commentRepository.deleteById(commentId);
-        // Return empty to remove the comment element via HTMX
-        return "";
+
+        // Reload activity feed
+        model.addAttribute("task", task);
+        model.addAttribute("activityLogs", activityLogRepository.findByTaskOrderByTimestampDesc(task));
+        model.addAttribute("comments", commentRepository.findByTaskOrderByCreatedAtAsc(task));
+        return "fragments/task-activity :: activity";
     }
 
     @PutMapping("/{taskId}/comments/{commentId}")
-    public String updateComment(@PathVariable UUID taskId, @PathVariable UUID commentId, @RequestParam String content, Model model) {
+    public ResponseEntity<?> updateComment(@PathVariable UUID commentId, @RequestParam String content) {
         var comment = commentRepository.findById(commentId);
         if (comment.isPresent()) {
             var c = comment.get();
             c.setContent(content);
             commentRepository.save(c);
-            model.addAttribute("comment", c);
+            return ResponseEntity.ok().build();
         }
-        return "fragments/task-activity :: comment";
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{taskId}/comments/{commentId}/reactions")
+    public ResponseEntity<?> addReaction(@PathVariable UUID taskId, @PathVariable UUID commentId, @RequestParam String emoji) {
+        var comment = commentRepository.findById(commentId);
+        if (comment.isPresent()) {
+            var c = comment.get();
+            var reaction = reactionRepository.findByCommentAndEmoji(c, emoji);
+
+            if (reaction.isPresent()) {
+                // Increment existing reaction
+                var r = reaction.get();
+                r.setCount(r.getCount() + 1);
+                reactionRepository.save(r);
+            } else {
+                // Create new reaction
+                at.geise.test.springboot4test.domain.Reaction newReaction = new at.geise.test.springboot4test.domain.Reaction(c, emoji);
+                reactionRepository.save(newReaction);
+            }
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
