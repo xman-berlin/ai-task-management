@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-13
+
+### Added
+- Modernized UI with gradient header, icon buttons, and color-coded badges
+- Bootstrap Icons across task list, forms, pagination, and comment actions
+- Reaction badges persisted and displayed under comments
+
+### Fixed
+- Comment edit UX: icon-button click handling, editable textarea, and caret visibility
+- Pagination controls with clear icon affordances
+- Post comment button updated with icon for consistency
+
+### Changed
+- Task form/header styling for a cleaner, state-of-the-art theme
+- Task list action buttons simplified to icons with improved hover/active states
+
 ## [0.2.0] - 2026-01-13
 
 ### Added
@@ -83,4 +99,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Removed` for removed features
 - `Fixed` for bug fixes
 - `Security` for vulnerability fixes
-

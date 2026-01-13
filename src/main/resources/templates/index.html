@@ -287,8 +287,9 @@
 
   // Comment editing functions
   document.body.addEventListener('click', function(e) {
-    if (e.target.classList.contains('edit-comment-btn')) {
-      editComment(e.target);
+    const btn = e.target.closest('.edit-comment-btn');
+    if (btn) {
+      editComment(btn);
     }
   });
 
@@ -305,8 +306,23 @@
     const textarea = document.createElement('textarea');
     textarea.className = 'form-control form-control-sm mb-2';
     textarea.id = 'edit-text-' + commentId;
-    textarea.style.minHeight = '60px';
+    textarea.style.display = 'block';
+    textarea.style.minHeight = '100px';
+    textarea.style.width = '100%';
+    textarea.style.color = '#212529';
+    textarea.style.background = '#fff';
+    textarea.style.caretColor = '#000';
+    textarea.style.border = '1px solid #0d6efd';
+    textarea.style.borderRadius = '6px';
+    textarea.style.padding = '0.5rem';
+    textarea.style.outline = 'none';
+    textarea.style.boxShadow = '0 0 0 0.2rem rgba(13,110,253,.25)';
+    textarea.style.zIndex = '1';
     textarea.value = originalContent;
+    textarea.readOnly = false;
+    textarea.disabled = false;
+    textarea.autofocus = true;
+    textarea.setAttribute('aria-label', 'Edit comment');
 
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';
@@ -329,6 +345,7 @@
     contentEl.appendChild(textarea);
     contentEl.appendChild(buttonDiv);
     textarea.focus();
+    textarea.selectionStart = textarea.value.length;
   }
 
   function cancelEdit(commentId, originalContent) {
