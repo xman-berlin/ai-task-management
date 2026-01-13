@@ -120,6 +120,19 @@ public class UiController {
     @DeleteMapping("/{taskId}/comments/{commentId}")
     public String deleteComment(@PathVariable UUID taskId, @PathVariable UUID commentId) {
         commentRepository.deleteById(commentId);
+        // Return empty to remove the comment element via HTMX
         return "";
+    }
+
+    @PutMapping("/{taskId}/comments/{commentId}")
+    public String updateComment(@PathVariable UUID taskId, @PathVariable UUID commentId, @RequestParam String content, Model model) {
+        var comment = commentRepository.findById(commentId);
+        if (comment.isPresent()) {
+            var c = comment.get();
+            c.setContent(content);
+            commentRepository.save(c);
+            model.addAttribute("comment", c);
+        }
+        return "fragments/task-activity :: comment";
     }
 }

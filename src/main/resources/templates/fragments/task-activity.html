@@ -40,14 +40,20 @@
                                 <small class="text-muted" th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
                             </div>
                             <div class="mt-1" th:text="${comment.content}" th:id="'comment-content-' + ${comment.id}"></div>
+                            <div class="mt-2 gap-2 d-flex" th:id="'comment-reactions-' + ${comment.id}">
+                                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '👍')">👍</button>
+                                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '❤️')">❤️</button>
+                                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '😂')">😂</button>
+                                <button type="button" class="btn btn-sm btn-light" onclick="addReaction(this, '🎉')">🎉</button>
+                            </div>
                         </div>
                         <div class="btn-group btn-group-sm" role="group">
                             <button type="button" class="btn btn-outline-secondary"
                                     th:attr="onclick='editComment(' + ${comment.id} + ')'">Edit</button>
                             <button type="button" class="btn btn-outline-danger"
                                     th:attr="hx-delete=@{/tasks/{taskId}/comments/{id}(taskId=${task.id}, id=${comment.id})}"
-                                    hx-target="'#comment-' + ${comment.id}"
-                                    hx-swap="outerHTML swap:1s">Delete</button>
+                                    hx-target="#task-activity"
+                                    hx-swap="innerHTML">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -99,28 +105,16 @@ function saveComment(commentId) {
     if (!textarea) return;
 
     const newContent = textarea.value;
-    // In a real app, you'd send this to the server via PUT /tasks/{taskId}/comments/{commentId}
     const contentEl = document.getElementById('comment-content-' + commentId);
     if (contentEl) {
         contentEl.textContent = newContent;
     }
 }
 
-function addReaction(commentId, emoji) {
-    const commentEl = document.getElementById('comment-' + commentId);
-    if (!commentEl) return;
-
-    let reactionsEl = commentEl.querySelector('.comment-reactions');
-    if (!reactionsEl) {
-        reactionsEl = document.createElement('div');
-        reactionsEl.className = 'comment-reactions mt-2';
-        commentEl.appendChild(reactionsEl);
-    }
-
-    const reactionBtn = document.createElement('button');
-    reactionBtn.className = 'btn btn-sm btn-light me-2';
-    reactionBtn.textContent = emoji + ' 1';
-    reactionBtn.onclick = () => addReaction(commentId, emoji);
-    reactionsEl.appendChild(reactionBtn);
+function addReaction(btn, emoji) {
+    const count = parseInt(btn.textContent.split(' ')[1]) || 0;
+    btn.textContent = emoji + ' ' + (count + 1);
+    btn.classList.add('active');
 }
 </script>
+
